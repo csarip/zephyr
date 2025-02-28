@@ -17,18 +17,18 @@
 
 LOG_MODULE_REGISTER(MFD_MAX2221X, CONFIG_MFD_LOG_LEVEL);
 
-struct max2221x_config {
+struct mfd_max2221x_config {
     struct spi_dt_spec spi;
 };
 
-struct max2221x_data {
+struct mfd_max2221x_data {
     // Add any necessary data fields here
 };
 
 int max2221x_reg_read(const struct device *dev, uint8_t addr, uint16_t *value)
 {
     int ret;
-    const struct max2221x_config *config = dev->config;
+    const struct mfd_max2221x_config *config = dev->config;
     uint8_t rxbuffer[3] = {0};
     size_t rx_len = 3;
 
@@ -73,7 +73,7 @@ int max2221x_reg_read(const struct device *dev, uint8_t addr, uint16_t *value)
 
 int max2221x_reg_write(const struct device *dev, uint8_t addr, uint16_t value)
 {
-    const struct max2221x_config *config = dev->config;
+    const struct mfd_max2221x_config *config = dev->config;
 
     addr = FIELD_PREP(MAX2221X_SPI_TRANS_ADDR, addr) | FIELD_PREP(MAX2221X_SPI_TRANS_DIR, 1);
     value = sys_cpu_to_be16(value);
@@ -113,7 +113,7 @@ int max2221x_reg_update(const struct device *dev, uint8_t addr, uint16_t mask, u
 
 static int max2221x_init(const struct device *dev)
 {
-    const struct max2221x_config *config = dev->config;
+    const struct mfd_max2221x_config *config = dev->config;
 
     if (!spi_is_ready_dt(&config->spi)) {
         LOG_ERR("SPI device %s not ready", config->spi.bus->name);
@@ -124,12 +124,12 @@ static int max2221x_init(const struct device *dev)
 }
 
 #define MAX2221X_DEFINE(inst)									\
-    static struct max2221x_data max2221x_data_##inst;						\
-    static const struct max2221x_config max2221x_config_##inst = {				\
+    static struct mfd_max2221x_data mfd_max2221x_data_##inst;						\
+    static const struct mfd_max2221x_config mfd_max2221x_config_##inst = {				\
         .spi = SPI_DT_SPEC_INST_GET(inst, SPI_WORD_SET(8) | SPI_TRANSFER_MSB, 0),	\
     };											\
                                                 \
-    DEVICE_DT_INST_DEFINE(inst, max2221x_init, NULL, &max2221x_data_##inst, &max2221x_config_##inst,	   \
+    DEVICE_DT_INST_DEFINE(inst, max2221x_init, NULL, &mfd_max2221x_data_##inst, &mfd_max2221x_config_##inst,	   \
                   POST_KERNEL, CONFIG_MFD_INIT_PRIORITY, NULL);
 
 DT_INST_FOREACH_STATUS_OKAY(MAX2221X_DEFINE)
