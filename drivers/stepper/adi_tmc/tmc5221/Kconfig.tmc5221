@@ -1,0 +1,13 @@
+# SPDX-FileCopyrightText: Copyright (c) 2025 Cherrence Sarip <Cherrence.sarip@analog.com>
+# SPDX-License-Identifier: Apache-2.0
+
+config STEPPER_ADI_TMC5222
+	bool "Activate trinamic tmc5222 stepper driver"
+	depends on DT_HAS_ADI_TMC5222_ENABLED
+	select SPI
+	select STEPPER_ADI_TMC_SPI
+	default y
+	help
+	  Low-level SPI driver for TMC5222 stepper motor controller.
+	  Provides register read/write access via SPI interface.
+	  Uses the common Trinamic SPI bus abstraction layer.
