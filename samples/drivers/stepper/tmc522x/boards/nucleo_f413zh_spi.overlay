@@ -1,0 +1,62 @@
+/*
+ * SPDX-FileCopyrightText: Copyright (c) 2026 Cherrence Sarip <Cherrence.sarip@analog.com>
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * TMC522x Position/Velocity Test - SPI variant
+ */
+
+/ {
+	aliases {
+		stepper0 = &tmc522x_spi;
+	};
+};
+
+&spi1 {
+	status = "okay";
+	pinctrl-0 = <&spi1_sck_pa5 &spi1_miso_pa6 &spi1_mosi_pa7>;
+	pinctrl-names = "default";
+	cs-gpios = <&gpiof 12 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+
+	tmc522x_spi: tmc522x@0 {
+		compatible = "adi,tmc522x";
+		reg = <0>;
+		spi-max-frequency = <DT_FREQ_M(4)>;
+
+		drven-gpios = <&gpiob 11 GPIO_ACTIVE_HIGH>;
+		sleepn-gpios = <&gpiof 10 GPIO_ACTIVE_HIGH>;
+		diag0-gpios = <&gpioe 7 GPIO_ACTIVE_LOW>;
+		diag1-gpios = <&gpiod 12 GPIO_ACTIVE_LOW>;
+
+		clock-frequency = <DT_FREQ_M(16)>;
+		chopper-mode = "spreadcycle";
+		chm-mode = "spreadcycle";
+		micro-step-res = <16>;
+
+		irun = <31>;
+		ihold = <16>;
+
+		toff = <5>;
+		hstrt = <7>;
+		hend = <3>;
+		tbl = <3>;
+
+		sgt = <0>;
+		semin = <1>;
+		semax = <2>;
+		seup = <1>;
+		sedn = <1>;
+		sg-stop = <0>;
+
+		vstart = <10>;
+		vstop = <10>;
+		v1 = <0>;
+		v2 = <0>;
+		vmax = <10000>;
+		a1 = <10000>;
+		a2 = <10000>;
+		amax = <10000>;
+		d1 = <10000>;
+		d2 = <10000>;
+		dmax = <10000>;
+	};
+};
