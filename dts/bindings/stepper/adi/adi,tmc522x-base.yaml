@@ -1,0 +1,477 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 Cherrence Sarip <Cherrence.sarip@analog.com>
+# SPDX-License-Identifier: Apache-2.0
+
+description: |
+  Trinamic TMC522x stepper motor controller (base binding)
+
+  This is the base binding for TMC522x family:
+  - TMC5221 (SPI variant) - use adi,tmc522x-spi.yaml
+  - TMC5222 (I2C variant) - use adi,tmc522x-i2c.yaml
+
+  Do not use this file directly - use adi,tmc522x-spi.yaml or adi,tmc522x-i2c.yaml.
+
+include: stepper-controller.yaml
+
+properties:
+  # Interrupt Support (Optional)
+
+  interrupt-gpios:
+    type: phandle-array
+    description: |
+      GPIO connections for DIAG0 and DIAG1 interrupt pins.
+
+      - DIAG0: StallGuard event (motor stall detection)
+      - DIAG1: Position reached event (target position achieved)
+
+      Both pins are configured as active-low push-pull outputs by the driver.
+      GPIO interrupt flags should typically be GPIO_ACTIVE_LOW.
+
+      Example:
+        interrupt-gpios = <&gpioc 6 GPIO_ACTIVE_LOW>,  /* DIAG0 - StallGuard */
+                          <&gpioc 7 GPIO_ACTIVE_LOW>;  /* DIAG1 - Position reached */
+
+  interrupt-names:
+    type: string-array
+    enum:
+      - "stallguard"
+      - "pos-reached"
+    description: |
+      Names for the interrupt GPIOs. Must match the order of interrupt-gpios.
+      Valid names are "stallguard" and "pos-reached".
+
+      Example:
+        interrupt-names = "stallguard", "pos-reached";
+
+  diag0-gpios:
+    type: phandle-array
+    description: |
+      GPIO connection for DIAG0 interrupt pin (StallGuard event).
+      Alternative to using interrupt-gpios array.
+      This pin is configured as active-low push-pull output by the driver.
+
+      Example:
+        diag0-gpios = <&gpioe 7 GPIO_ACTIVE_LOW>;  /* DIAG0 - StallGuard */
+
+  diag1-gpios:
+    type: phandle-array
+    description: |
+      GPIO connection for DIAG1 interrupt pin (Position reached event).
+      Alternative to using interrupt-gpios array.
+      This pin is configured as active-low push-pull output by the driver.
+
+      Example:
+        diag1-gpios = <&gpiod 12 GPIO_ACTIVE_LOW>;  /* DIAG1 - Position reached */
+
+  # Motor and Motion Parameters
+
+  # Basic Ramp Generator Parameters (from adi,trinamic-ramp-generator.yaml)
+  vstart:
+    type: int
+    default: 1
+    description: |
+      Motor start velocity in [µsteps/t](unsigned)
+      Normally, set VSTOP ≥ VSTART! VSTART may be set to a higher value,
+      when motion distance is sufficient to allow deceleration to VSTOP.
+
+  a1:
+    type: int
+    default: 0
+    description: |
+      First acceleration between VSTART and V1 in [µsteps/ta²](unsigned)
+
+  v1:
+    type: int
+    default: 0
+    description: |
+      First acceleration / deceleration phase threshold velocity in [µsteps/t] (unsigned)
+      0: Disables A1 and D1 phase, use AMAX, DMAX only
+
+  amax:
+    type: int
+    default: 0
+    description: |
+      Second acceleration between V1 and VMAX in [µsteps/ta²](unsigned)
+      This is the acceleration and deceleration value for velocity mode.
+
+  vmax:
+    type: int
+    default: 0
+    description: |
+      Motion ramp target velocity in [µsteps/t] (for positioning ensure VMAX ≥ VSTART) (unsigned)
+      This is the target velocity in velocity mode. It can be changed any time during a motion.
+
+  dmax:
+    type: int
+    default: 0
+    description: |
+      Deceleration between VMAX and V1 in [µsteps/ta²](unsigned)
+
+  d1:
+    type: int
+    default: 1
+    description: |
+      Deceleration between V1 and VSTOP in [µsteps/ta²](unsigned)
+      Attention: Do not set 0 in positioning mode, even if V1=0!
+
+  vstop:
+    type: int
+    default: 10
+    description: |
+      Motor stop velocity in [µsteps/t] (unsigned)
+      Attention: Set VSTOP ≥ VSTART!
+      Attention: Do not set 0 in positioning mode, minimum 10 recommended!
+
+  ihold:
+    type: int
+    default: 0
+    description: |
+      Hold current in % of run current (0-100)
+      Standstill current (0=1/32…31=32/32)
+      In combination with StealthChop mode, setting IHOLD=0 allows to choose
+      freewheeling or coil short circuit for motor stand still
+
+  irun:
+    type: int
+    default: 0
+    description: |
+      Motor run current (0=1/32…31=32/32)
+      Hint: Choose sense resistors in a way, that normal IRUN is 16 to 31
+      for best microstep performance.
+
+  iholddelay:
+    type: int
+    default: 0
+    description: |
+      Controls the number of clock cycles for motor power down after standstill
+      is detected (stst=1) and TPOWERDOWN has expired. The smooth transition
+      avoids a motor jerk upon power down. Range: 0 to 15
+
+  # Advanced Ramp Generator Parameters (S-curve support)
+
+  a2:
+    type: int
+    default: 50000
+    description: |
+      Second acceleration phase (A2) for S-curve ramp profile.
+      Used between V1 and VMAX. Unit: pps^2 (pulses per second squared).
+      If not set, defaults to AMAX value for linear ramp.
+
+  v2:
+    type: int
+    default: 300000
+    description: |
+      Second velocity threshold (V2) for S-curve ramp profile.
+      Marks transition point between first and second acceleration phases.
+      Unit: pps (pulses per second). Should be between V1 and VMAX.
+
+  d2:
+    type: int
+    default: 1600
+    description: |
+      Second deceleration phase (D2) for S-curve ramp profile.
+      Used between VMAX and V1 during deceleration.
+      Unit: pps^2. If not set, defaults to DMAX value.
+
+  # Current Control & Delay Parameters
+
+  irundelay:
+    type: int
+    default: 0
+    description: |
+      Delay before switching from hold current to run current.
+      Controls the time between standstill detection and run current activation.
+      Unit: 2^18 clock cycles. Range: 0-15.
+      0 = immediate switch (default).
+
+  tpowerdown:
+    type: int
+    default: 10
+    description: |
+      Delay before reducing to standby current after motor stops.
+      Time since last step until current is reduced to hold value.
+      Formula: tpowerdown * 2^18 / f_clk seconds.
+      Default 10 ≈ 2.6 seconds @ 16 MHz clock.
+      Range: 0-255.
+
+  # Driver Configuration (Current Sensing & Scaling)
+
+  fs-gain:
+    type: int
+    default: 0
+    description: |
+      Full-scale current sense resistor gain setting.
+      Adjusts the amplifier gain for current sensing.
+      0 = normal gain (default)
+      1-3 = increased gain settings
+      See TMC5221 datasheet for details.
+
+  fs-sense:
+    type: int
+    default: 0
+    description: |
+      Full-scale current sense resistor selection.
+      Configures the reference resistor value for current measurement.
+      0 = default setting
+      1-3 = alternative settings
+      Consult TMC5221 datasheet for your hardware.
+
+  global-scaler:
+    type: int
+    default: 231
+    description: |
+      Global current scaler (8-bit value: 0-255).
+      Scales the motor current globally. Can be used for dynamic
+      current adjustment without changing IRUN/IHOLD.
+      0 = motor disabled, 255 = maximum current.
+      Formula: I_actual = (global-scaler / 256) * I_configured
+      Default 231 ≈ 90% of configured current.
+
+  # Chopper Configuration
+
+  toff:
+    type: int
+    default: 5
+    description: |
+      Chopper off-time (CRITICAL parameter - must be non-zero!).
+      Duration of slow decay phase. Determines chopper frequency.
+      0 = driver disabled
+      1 = shortest off-time, highest frequency
+      15 = longest off-time, lowest frequency
+      Default: 5 (balanced performance)
+      Chopper freq ≈ f_clk / (32 * toff)
+
+  tbl:
+    type: int
+    default: 2
+    description: |
+      Comparator blank time (noise filter).
+      Blanking time to prevent false current measurements due to switching noise.
+      0 = 16 clocks (shortest)
+      1 = 24 clocks
+      2 = 36 clocks (default)
+      3 = 54 clocks (longest)
+
+  hstrt:
+    type: int
+    default: 4
+    description: |
+      Hysteresis start value (chopper tuning parameter).
+      Controls the hysteresis start value for the current regulation.
+      In standard mode (CHM=0): TFD[2:0] offset (0-7)
+      Higher values = faster current regulation response
+      Default: 4 (balanced performance)
+      Tune based on motor inductance and desired current ripple.
+
+  hend:
+    type: int
+    default: 0
+    description: |
+      Hysteresis end offset (chopper tuning parameter).
+      Controls the width of the hysteresis window.
+      Range: -3 to +12 (encoded as 0-15 in register)
+      Lower values = narrower hysteresis, lower current ripple
+      Higher values = wider hysteresis, higher current ripple
+      Default: 0 (narrowest hysteresis)
+      Formula: offset = hend - 3
+
+  # PWM Configuration (StealthChop2 mode)
+
+  pwm-freewheel:
+    type: int
+    default: 0
+    description: |
+      PWM freewheel mode selection.
+      Controls motor behavior during freewheeling phases.
+      0 = normal operation (default)
+      1 = freewheel mode
+      2 = short to ground (LS)
+      3 = short to supply (HS)
+
+  pwm-freq:
+    type: int
+    default: 0
+    description: |
+      PWM frequency selection for StealthChop2 mode.
+      0 = 2/1024 * f_clk (default, ~30.5 kHz @ 16 MHz)
+      1 = 2/683 * f_clk (~46.8 kHz)
+      2 = 2/512 * f_clk (~62.5 kHz)
+      3 = 2/410 * f_clk (~78 kHz)
+
+  # StallGuard Configuration
+
+  sgt:
+    type: int
+    default: 0
+    description: |
+      StallGuard2 threshold (signed 7-bit: -64 to +63).
+      Lower values = higher sensitivity to stall detection.
+      Higher values = less sensitive (fewer false positives).
+      0 = default sensitivity
+      Negative = very sensitive
+      Positive = less sensitive
+
+  sgt4:
+    type: int
+    default: 0
+    description: |
+      StallGuard4 threshold (9-bit: 0 to 511).
+      Used for StallGuard4 algorithm (more advanced).
+      0 = default / off
+      Higher values = less sensitive to stall
+      Consult datasheet for tuning guidance.
+
+  sg-stop:
+    type: int
+    default: 0
+    description: |
+      Enable automatic motor stop on stall detection (0=disabled, 1=enabled).
+      When enabled, sets BOTH required bits for automatic stop:
+      - COOLCONF.SG_STOP (bit 10): Enables stall detection triggering
+      - SW_MODE.SG_STOP_ENABLE (bit 10): Enables automatic motor stop action
+
+      Important: Both bits MUST be set for automatic stop to work!
+      The driver configures both registers when this property is set to 1.
+
+      Requires:
+      - StallGuard2 active (TCOOLTHRS configured, velocity in range)
+      - SpreadCycle chopper mode (StealthChop doesn't support StallGuard2)
+
+      0 = Stall detection only (no automatic stop, manual handling via callback)
+      1 = Automatic motor stop on stall (recommended for most applications)
+
+  # CoolStep Configuration (Automatic Current Adjustment)
+
+  semin:
+    type: int
+    default: 0
+    description: |
+      CoolStep minimum StallGuard threshold (0-15).
+      When SG_RESULT falls below this value, current is increased.
+      0 = CoolStep disabled
+      Higher values = more aggressive current increase
+      Typical range: 5-10 for most applications
+
+  semax:
+    type: int
+    default: 0
+    description: |
+      CoolStep maximum StallGuard threshold (0-3).
+      When SG_RESULT exceeds (semin + semax + 1) * 32, current is decreased.
+      0 = semin + 32
+      1 = semin + 64
+      2 = semin + 96
+      3 = semin + 128
+
+  seup:
+    type: int
+    default: 0
+    description: |
+      CoolStep current increment step width (0-3).
+      Controls how quickly current increases when load detected.
+      0 = 1 step increment
+      1 = 2 step increment
+      2 = 4 step increment
+      3 = 8 step increment (fastest response)
+
+  sedn:
+    type: int
+    default: 0
+    description: |
+      CoolStep current decrement speed (0-3).
+      Controls how quickly current decreases when load reduces.
+      0 = 32 steps (slow decrease)
+      1 = 8 steps
+      2 = 2 steps (medium decrease)
+      3 = 1 step (fast decrease, aggressive energy saving)
+
+  seimin:
+    type: boolean
+    description: |
+      CoolStep minimum current limit.
+      If present = Minimum current is 1/4 of IRUN (more energy savings)
+      If omitted = Minimum current is 1/2 of IRUN (default)
+
+  # Motor Physical Parameters
+
+  step-angle-millidegrees:
+    type: int
+    default: 1800
+    description: |
+      Motor step angle in millidegrees (1/1000 degree).
+      Used for velocity threshold calculations (TPWMTHRS, TCOOLTHRS, THIGH).
+      Common values:
+        1800 = 1.8° per step (200 steps/revolution) - NEMA standard
+        900  = 0.9° per step (400 steps/revolution) - high precision
+      This value MUST match your actual stepper motor specification.
+
+  # Clock & GPIO Configuration
+
+  clock-frequency:
+    type: int
+    default: 16000000
+    description: |
+      The frequency of the clock signal provided to the TMC5221.
+      This is used for velocity and acceleration calculations.
+      Default is 16 MHz internal oscillator.
+
+  drven-gpios:
+    type: phandle-array
+    description: |
+      Driver enable pin (active high). REQUIRED for stepper_enable() API.
+      Enables the power stage when high. This is part of the datasheet
+      power-up sequence (Step 3).
+
+  sleepn-gpios:
+    type: phandle-array
+    description: |
+      Sleep/wake pin (active high). Part of datasheet power-up sequence (Step 1).
+      Must be set high for normal operation. If not specified in devicetree,
+      the SLEEPN pin MUST be tied to VDD in hardware.
+      Per datasheet: Set SLEEPN=1 before accessing registers, wait 10ms.
+
+  chopper-mode:
+    type: string
+    default: "spreadcycle"
+    description: |
+      High-level chopper mode selection (EN_PWM_MODE in GCONF register).
+
+      This controls the fundamental operating mode:
+      - "spreadcycle": Current chopping mode (EN_PWM_MODE=0, default)
+                       Uses CHOPCONF register for configuration
+                       See 'chm-mode' property to select SpreadCycle vs Classic variant
+      - "stealthchop": Voltage PWM mode (EN_PWM_MODE=1)
+                       Silent operation with fixed PWM frequency
+                       Uses PWMCONF register for configuration
+    enum:
+      - "spreadcycle"
+      - "stealthchop"
+
+  chm-mode:
+    type: string
+    default: "spreadcycle"
+    description: |
+      CHM bit configuration in CHOPCONF register (Bit 14).
+
+      Only applies when 'chopper-mode' is set to "spreadcycle".
+      Selects the specific chopper algorithm used for current regulation:
+
+      - "spreadcycle": SpreadCycle mode (CHM=0, default, recommended)
+                       • Adaptive hysteresis chopper
+                       • Variable chopper frequency
+                       • Reduces motor resonance
+                       • Smoother torque production
+                       • Uses HSTRT and HEND for hysteresis control
+                       • Best for most applications
+
+      - "classic":     Classic constant off-time mode (CHM=1)
+                       • Traditional fixed off-time chopper
+                       • More predictable behavior
+                       • Simpler parameter understanding
+                       • HSTRT bits reused as TFD (fast decay time)
+                       • HEND bits reused as OFFSET (sine wave offset)
+                       • Use for legacy compatibility or specific motor types
+
+      When 'chopper-mode' is "stealthchop", this property is ignored.
+    enum:
+      - "spreadcycle"
+      - "classic"
