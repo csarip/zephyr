@@ -1,0 +1,12 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 Cherrence Sarip <cherrence.sarip@analog.com>
+# SPDX-License-Identifier: Apache-2.0
+
+config STEPPER_ADI_TMC6460
+	bool "Activate Trinamic TMC6460 driver"
+	depends on DT_HAS_ADI_TMC6460_ENABLED
+	depends on SPI
+	default y
+	help
+	  Enable support for the Analog Devices / Trinamic TMC6460
+	  motor controller accessed via SPI. The TMC6460 uses 48-bit
+	  (6-byte) SPI datagrams with a 16-bit address space.
