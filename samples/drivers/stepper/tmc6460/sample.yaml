@@ -1,0 +1,11 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 Cherrence Sarip <cherrence.sarip@analog.com>
+# SPDX-License-Identifier: Apache-2.0
+
+sample:
+  name: TMC6460 Sample
+  description: Demonstrates basic register read/write on the TMC6460 via SPI.
+tests:
+  sample.drivers.stepper.tmc6460:
+    tags: stepper spi
+    depends_on: spi
+    filter: dt_compat_enabled("adi,tmc6460")
