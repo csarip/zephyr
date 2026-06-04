@@ -1,0 +1,17 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 Cherrence Sarip <cherrence.sarip@analog.com>
+# SPDX-License-Identifier: Apache-2.0
+
+description: |
+  Analog Devices / Trinamic TMC6460 motor controller.
+  Directly connected on an SPI bus.
+
+compatible: "adi,tmc6460"
+
+include:
+  - name: spi-device.yaml
+
+properties:
+  spi-max-frequency:
+    type: int
+    required: true
+    description: Maximum SPI clock frequency supported by the device.
