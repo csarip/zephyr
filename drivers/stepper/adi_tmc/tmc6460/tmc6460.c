@@ -171,7 +171,8 @@ static int tmc6460_init(const struct device *dev)
 	static const struct tmc6460_config tmc6460_config_##inst = {                \
 		.spi = SPI_DT_SPEC_INST_GET(inst,                                  \
 					    (SPI_OP_MODE_MASTER | SPI_TRANSFER_MSB |   \
-					     SPI_MODE_CPHA | SPI_WORD_SET(8)),         \
+					     SPI_MODE_CPHA |                           \
+					     SPI_WORD_SET(8)),                          \
 					    0),                                        \
 	};                                                                         \
                                                                                    \
