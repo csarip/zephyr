@@ -136,7 +136,6 @@ adi_tmc51xx_2: adi-tmc51xx@2 {
 	test-mode;
 	shaft;
 	clock-frequency = <16000000>; /* Internal/External Clock frequency */
-
 	tmc51xx_2_stepper_driver: tmc51xx-2-stepper-driver {
 		compatible = "adi,tmc51xx-stepper-driver";
 		micro-step-res = <256>;
@@ -156,6 +155,60 @@ adi_tmc51xx_2: adi-tmc51xx@2 {
 		vmax = <50>;
 		amax = <60>;
 		dmax = <70>;
+		tzerowait = <80>;
+		thigh = <90>;
+		tcoolthrs = <100>;
+		tpwmthrs = <110>;
+		tpowerdown = <120>;
+		ihold = <1>;
+		irun = <2>;
+		iholddelay = <3>;
+	};
+};
+
+adi_tmc5262: adi-tmc5262@3 {
+	compatible = "adi,tmc5262";
+	status = "okay";
+	reg = <0x03>;
+	spi-max-frequency = <8000000>;
+	label = "tmc5262_0";
+
+	clock-frequency = <16000000>; /* Internal/External Clock frequency */
+
+	sleepn-gpios = <&test_gpio 0x02 GPIO_ACTIVE_LOW>;
+	drvenn-gpios = <&test_gpio 0x03 GPIO_ACTIVE_LOW>;
+	diag0-gpios = <&test_gpio 0x04 (GPIO_ACTIVE_HIGH | GPIO_PULL_UP)>;
+
+	en-stealthchop;
+	shaft;
+
+	tmc5262_stepper_driver: tmc5262-stepper-driver {
+		compatible = "adi,tmc5262-stepper-driver";
+		micro-step-res = <256>;
+		/* ADI TMC stallguard settings specific to TMC5262 */
+		stallguard2-threshold = <9>;
+	};
+
+	tmc5262_motion_controller: tmc5262-motion-controller {
+		compatible = "adi,tmc5262-stepper-ctrl";
+
+		/* ADI TMC stallguard settings specific to TMC5262 */
+		activate-stallguard2;
+		stallguard-threshold-velocity = <50000>;
+		stallguard-velocity-check-interval-ms = <100>;
+
+		/* ADI TMC ramp generator as well as current settings */
+		vstart = <10>;
+		a1 = <20>;
+		v1 = <30>;
+		a2 = <25>;
+		v2 = <35>;
+		d2 = <45>;
+		d1 = <40>;
+		vmax = <50>;
+		amax = <60>;
+		dmax = <70>;
+		vstop = <10>;
 		tzerowait = <80>;
 		thigh = <90>;
 		tcoolthrs = <100>;
