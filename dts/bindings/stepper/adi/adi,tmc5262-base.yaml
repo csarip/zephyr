@@ -1,0 +1,83 @@
+# SPDX-FileCopyrightText: Copyright The Zephyr Project Contributors
+# SPDX-FileCopyrightText: Copyright (c) 2026 Analog Devices Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+description: |
+  Common properties for the Analog Devices TMC5262 Stepper Motor Controller.
+
+properties:
+  clock-frequency:
+    type: int
+    required: true
+    description: |
+      The frequency of the clock signal driving the TMC5262 in Hz. Used for the
+      real world velocity and acceleration conversions.
+
+  sleepn-gpios:
+    type: phandle-array
+    required: true
+    description: |
+      Active-low sleep control pin (SLEEPN). Driven high to place the device in
+      sleep during initialization and low to wake it.
+
+  drvenn-gpios:
+    type: phandle-array
+    required: true
+    description: |
+      Active-low driver enable pin (DRVENN).
+
+  motor-inductance:
+    type: int
+    default: 0
+    description: Motor coil inductance value written to the COIL_INDUCT register.
+
+  cool-cur-div:
+    type: int
+    default: 0
+    description: CoolStep+ current divider (COOLSTEPPLUS_CONF.cool_cur_div).
+
+  t-rcoil-meas:
+    type: int
+    default: 0
+    description: Coil resistance measurement period written to T_RCOIL_MEAS.
+
+  step-dir:
+    type: boolean
+    description: Enable STEP/DIR interface (GCONF.step_dir).
+
+  ov-nn:
+    type: boolean
+    description: Enable OV_NN behaviour (GCONF.ov_nn).
+
+  length-steppulse:
+    type: int
+    default: 0
+    description: STEP pulse length in clock cycles (GCONF.length_steppulse, 0-15).
+
+  direct-mode:
+    type: boolean
+    description: Enable direct coil current control (GCONF.direct_mode).
+
+  stop-enable:
+    type: boolean
+    description: Enable the hard stop function (GCONF.stop_enable).
+
+  small-hysteresis:
+    type: boolean
+    description: Use a smaller position comparison hysteresis (GCONF.small_hysteresis).
+
+  shaft:
+    type: boolean
+    description: Invert the motor direction (GCONF.shaft).
+
+  multistep-filt:
+    type: boolean
+    description: Enable step pulse filtering (GCONF.multistep_filt).
+
+  en-stealthchop:
+    type: boolean
+    description: Enable StealthChop voltage PWM mode (GCONF.en_stealthchop).
+
+  fast-standstill:
+    type: boolean
+    description: Enable fast standstill detection (GCONF.fast_standstill).

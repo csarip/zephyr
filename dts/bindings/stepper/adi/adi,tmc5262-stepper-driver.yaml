@@ -1,0 +1,13 @@
+# SPDX-FileCopyrightText: Copyright The Zephyr Project Contributors
+# SPDX-FileCopyrightText: Copyright (c) 2026 Analog Devices Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+compatible: "adi,tmc5262-stepper-driver"
+
+include:
+  - name: stepper-driver.yaml
+    property-allowlist:
+      - micro-step-res
+  - name: adi,trinamic-stallguard.yaml
+    property-allowlist:
+      - stallguard2-threshold
