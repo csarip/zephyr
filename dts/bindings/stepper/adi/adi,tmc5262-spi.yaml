@@ -1,0 +1,72 @@
+# SPDX-FileCopyrightText: Copyright The Zephyr Project Contributors
+# SPDX-FileCopyrightText: Copyright (c) 2026 Analog Devices Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+description: |
+  Analog Devices TMC5262 Stepper Motor Controller (SPI mode)
+
+compatible: "adi,tmc5262"
+
+include: [spi-device.yaml, "adi,tmc5262-base.yaml"]
+
+properties:
+  reg:
+    required: true
+
+  diag0-gpios:
+    type: phandle-array
+    description: |
+      Diagnostics output DIAG0 pin. Enables interrupt-based rampstat handling,
+      allowing the driver to respond to motor events such as position reached or
+      stall detection without polling.
+
+examples:
+  - |
+    &spi0 {
+        tmc5262: tmc5262@0 {
+            compatible = "adi,tmc5262";
+            reg = <0>;
+            spi-max-frequency = <DT_FREQ_M(8)>;
+            clock-frequency = <DT_FREQ_M(16)>;
+
+            sleepn-gpios = <&gpio0 1 GPIO_ACTIVE_LOW>;
+            drvenn-gpios = <&gpio0 2 GPIO_ACTIVE_LOW>;
+            diag0-gpios = <&gpio0 0 GPIO_ACTIVE_HIGH>;
+
+            en-stealthchop;
+
+            tmc5262_stepper_driver: stepper-driver {
+                compatible = "adi,tmc5262-stepper-driver";
+                micro-step-res = <256>;
+                stallguard2-threshold = <9>;
+            };
+
+            tmc5262_motion_controller: motion-controller {
+                compatible = "adi,tmc5262-stepper-ctrl";
+
+                activate-stallguard2;
+                stallguard-threshold-velocity = <50000>;
+                stallguard-velocity-check-interval-ms = <100>;
+
+                vstart = <10>;
+                a1 = <20>;
+                v1 = <30>;
+                a2 = <25>;
+                v2 = <35>;
+                d2 = <45>;
+                d1 = <40>;
+                vmax = <50>;
+                amax = <60>;
+                dmax = <70>;
+                vstop = <10>;
+                tzerowait = <80>;
+                thigh = <90>;
+                tcoolthrs = <100>;
+                tpwmthrs = <110>;
+                tpowerdown = <120>;
+                ihold = <1>;
+                irun = <2>;
+                iholddelay = <3>;
+            };
+        };
+    };
