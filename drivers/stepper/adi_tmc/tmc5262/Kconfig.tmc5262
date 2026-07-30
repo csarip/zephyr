@@ -1,0 +1,28 @@
+# SPDX-FileCopyrightText: Copyright The Zephyr Project Contributors
+# SPDX-FileCopyrightText: Copyright (c) 2026 Analog Devices Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+config STEPPER_ADI_TMC5262
+	bool "Activate Trinamic TMC5262 stepper driver"
+	depends on DT_HAS_ADI_TMC5262_ENABLED
+	select STEPPER_ADI_TMC_SPI if $(dt_compat_on_bus,$(DT_COMPAT_ADI_TMC5262),spi)
+	default y
+
+if STEPPER_ADI_TMC5262
+
+config STEPPER_ADI_TMC5262_STEPPER_CTRL
+	bool "Activate Trinamic TMC5262 motion controller"
+	depends on DT_HAS_ADI_TMC5262_STEPPER_CTRL_ENABLED
+	depends on DT_HAS_ADI_TMC5262_STEPPER_DRIVER_ENABLED
+	default y
+
+config STEPPER_ADI_TMC5262_STEPPER_DRIVER
+	bool "Activate Trinamic TMC5262 stepper driver"
+	depends on DT_HAS_ADI_TMC5262_STEPPER_DRIVER_ENABLED
+	default y
+
+module = TMC5262
+module-str = tmc5262
+source "drivers/stepper/adi_tmc/Kconfig.tmc_rampgen_template"
+
+endif # STEPPER_ADI_TMC5262
