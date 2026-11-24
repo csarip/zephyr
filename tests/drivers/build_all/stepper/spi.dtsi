@@ -216,3 +216,74 @@ adi_tmc522x: adi_tmc522x@3 {
 		d2 = <10000>;
 	};
 };
+
+adi_tmc5262: adi-tmc5262@4 {
+	compatible = "adi,tmc5262";
+	status = "okay";
+	reg = <0x04>;
+	spi-max-frequency = <8000000>;
+	sleepn-gpios = <&test_gpio 0x02 GPIO_ACTIVE_HIGH>;
+	drv-enn-gpios = <&test_gpio 0x03 GPIO_ACTIVE_LOW>;
+	do0-gpios = <&test_gpio 0x04 GPIO_ACTIVE_HIGH>;
+	do0-sources = "error", "stall", "ev-pos-reached";
+	current-range-ma = <4240>;
+	en-stealthchop;
+	stop-l-enable;
+	en-softstop;
+	udc-enable;
+
+	adi_tmc5262_stepper_driver: tmc5262-stepper-driver {
+		compatible = "adi,tmc5262-stepper-driver";
+		micro-step-res = <256>;
+	};
+
+	adi_tmc5262_motion_controller: tmc5262-motion-controller {
+		compatible = "adi,tmc5262-stepper-ctrl";
+		vmax = <53687>;
+		amax = <440>;
+		dmax = <440>;
+	};
+
+	adi_tmc5262_sensor: tmc5262-sensor {
+		compatible = "adi,tmc5262-sensor";
+	};
+};
+
+adi_tmc2262: adi-tmc2262@5 {
+	compatible = "adi,tmc2262";
+	status = "okay";
+	reg = <0x05>;
+	spi-max-frequency = <8000000>;
+	current-range-ma = <6000>;
+	do1-gpios = <&test_gpio 0x05 GPIO_ACTIVE_HIGH>;
+	do1-sources = "otpw", "udcstep";
+
+	adi_tmc2262_stepper_driver: tmc2262-stepper-driver {
+		compatible = "adi,tmc5262-stepper-driver";
+		micro-step-res = <16>;
+	};
+};
+
+adi_tmc3241: adi-tmc3241@6 {
+	compatible = "adi,tmc3241";
+	status = "okay";
+	reg = <0x06>;
+	spi-max-frequency = <8000000>;
+	current-range-ma = <4240>;
+
+	adi_tmc3241_stepper_driver: tmc3241-stepper-driver {
+		compatible = "adi,tmc5262-stepper-driver";
+		micro-step-res = <256>;
+	};
+
+	adi_tmc3241_motion_controller: tmc3241-motion-controller {
+		compatible = "adi,tmc5262-stepper-ctrl";
+		vmax = <53687>;
+		amax = <440>;
+		dmax = <440>;
+	};
+
+	adi_tmc3241_sensor: tmc3241-sensor {
+		compatible = "adi,tmc5262-sensor";
+	};
+};

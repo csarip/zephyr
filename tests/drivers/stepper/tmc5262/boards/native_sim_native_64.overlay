@@ -1,0 +1,147 @@
+/*
+ * SPDX-FileCopyrightText: Copyright (c) 2026 Analog Devices, Inc.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/*
+ * One SPI emulator bus with four chips: TMC5262 (ramp generator, event polling), TMC2262
+ * (DO1 interrupt), TMC3241 (ramp generator) and a second TMC3241 without SLEEPN and DRV_ENN
+ * pins (TOFF enable, power management without sleep).
+ */
+
+#include <zephyr/dt-bindings/gpio/gpio.h>
+
+/ {
+	test_gpio: gpio-tmc5262 {
+		compatible = "zephyr,gpio-emul";
+		gpio-controller;
+		#gpio-cells = <2>;
+		rising-edge;
+		falling-edge;
+		status = "okay";
+	};
+
+	test {
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		test_spi: spi@33334444 {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			compatible = "zephyr,spi-emul-controller";
+			reg = <0x33334444 0x1000>;
+			status = "okay";
+			clock-frequency = <2000000>;
+			cs-gpios = <&test_gpio 0 GPIO_ACTIVE_LOW>,
+				   <&test_gpio 1 GPIO_ACTIVE_LOW>,
+				   <&test_gpio 2 GPIO_ACTIVE_LOW>,
+				   <&test_gpio 3 GPIO_ACTIVE_LOW>;
+
+			c5262: tmc5262@0 {
+				compatible = "adi,tmc5262";
+				reg = <0>;
+				spi-max-frequency = <DT_FREQ_M(4)>;
+				sleepn-gpios = <&test_gpio 4 GPIO_ACTIVE_HIGH>;
+				drv-enn-gpios = <&test_gpio 5 GPIO_ACTIVE_LOW>;
+				current-range-ma = <4240>;
+				irun = <127>;
+				ihold = <32>;
+				en-stealthchop;
+				tpwmthrs = <500>;
+				stallguard2-threshold = <(-5)>;
+
+				c5262_sensor: sensor {
+					compatible = "adi,tmc5262-sensor";
+				};
+
+				c5262_drv: stepper-driver {
+					compatible = "adi,tmc5262-stepper-driver";
+					micro-step-res = <16>;
+				};
+
+				c5262_ctrl: motion-controller {
+					compatible = "adi,tmc5262-stepper-ctrl";
+					vstart = <1>;
+					a1 = <220>;
+					v1 = <26843>;
+					a2 = <330>;
+					v2 = <40265>;
+					amax = <440>;
+					vmax = <53687>;
+					dmax = <440>;
+					d2 = <330>;
+					d1 = <220>;
+					vstop = <10>;
+				};
+			};
+
+			c2262: tmc2262@1 {
+				compatible = "adi,tmc2262";
+				reg = <1>;
+				spi-max-frequency = <DT_FREQ_M(4)>;
+				sleepn-gpios = <&test_gpio 6 GPIO_ACTIVE_HIGH>;
+				drv-enn-gpios = <&test_gpio 7 GPIO_ACTIVE_LOW>;
+				do1-gpios = <&test_gpio 8 GPIO_ACTIVE_HIGH>;
+				do1-sources = "error", "stall";
+				current-range-ma = <6000>;
+				/* Non-default StealthChop+, StallGuard+, CoolStep+ and coil settings */
+				cur-p = <70>;
+				sgp-thrs = <20>;
+				sgp-filt-en;
+				cool-cur-div = <3>;
+				t-rcoil-meas = <2000>;
+				rcoil-manual;
+				rcoil-user-a = <100>;
+				rcoil-user-b = <200>;
+
+				c2262_drv: stepper-driver {
+					compatible = "adi,tmc5262-stepper-driver";
+					micro-step-res = <16>;
+				};
+			};
+
+			c3241: tmc3241@2 {
+				compatible = "adi,tmc3241";
+				reg = <2>;
+				spi-max-frequency = <DT_FREQ_M(8)>;
+				sleepn-gpios = <&test_gpio 9 GPIO_ACTIVE_HIGH>;
+				drv-enn-gpios = <&test_gpio 10 GPIO_ACTIVE_LOW>;
+				current-range-ma = <4240>;
+				hyst = <10>;
+				nosd;
+				/* Reference switches, virtual stop and position compare */
+				stop-l-enable;
+				en-softstop;
+				virtual-stop-l = <(-100)>;
+				virtual-stop-r = <100000>;
+				x-compare = <5000>;
+				x-compare-repeat = <10>;
+				do0-gpios = <&test_gpio 11 GPIO_ACTIVE_HIGH>;
+				do0-sources = "xcomp";
+
+				c3241_drv: stepper-driver {
+					compatible = "adi,tmc5262-stepper-driver";
+					micro-step-res = <256>;
+				};
+
+				c3241_ctrl: motion-controller {
+					compatible = "adi,tmc5262-stepper-ctrl";
+					vmax = <53687>;
+					amax = <440>;
+					dmax = <440>;
+				};
+			};
+
+			c3241b: tmc3241@3 {
+				compatible = "adi,tmc3241";
+				reg = <3>;
+				spi-max-frequency = <DT_FREQ_M(8)>;
+
+				c3241b_drv: stepper-driver {
+					compatible = "adi,tmc5262-stepper-driver";
+					micro-step-res = <256>;
+				};
+			};
+		};
+	};
+};
