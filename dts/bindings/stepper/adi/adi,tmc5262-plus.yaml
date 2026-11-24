@@ -1,0 +1,233 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 Analog Devices, Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+description: |
+  Optional properties of the StealthChop+, StallGuard+, CoolStep+, uDcStep and coil measurement
+  features of the TMC5262 and TMC2262 (not available on the TMC3241). Every property is
+  optional; the default is the reset value of the datasheet register, so a node without any of
+  them leaves the features at their power-up configuration. This file is included by
+  adi,tmc5262.yaml and adi,tmc2262.yaml only: on the TMC3241 the properties do not exist and
+  using one fails the devicetree build.
+
+properties:
+  cur-i:
+    type: int
+    default: 10
+    description: CURRENT_PI_REG.CUR_I, integral gain of the StealthChop+ current regulator.
+    min: 0
+    max: 1023
+
+  cur-p:
+    type: int
+    default: 64
+    description: CURRENT_PI_REG.CUR_P, proportional gain of the StealthChop+ current regulator.
+    min: 0
+    max: 4095
+
+  angle-i:
+    type: int
+    default: 20
+    description: ANGLE_PI_REG.ANGLE_I, integral gain of the StealthChop+ angle regulator.
+    min: 0
+    max: 1023
+
+  angle-p:
+    type: int
+    default: 50
+    description: ANGLE_PI_REG.ANGLE_P, proportional gain of the StealthChop+ angle regulator.
+    min: 0
+    max: 4095
+
+  cur-pi-limit:
+    type: int
+    default: 4095
+    description: CUR_ANGLE_LIMIT.CUR_PI_LIMIT, limit of the current regulator output.
+    min: 0
+    max: 4095
+
+  angle-pi-limit:
+    type: int
+    default: 256
+    description: CUR_ANGLE_LIMIT.ANGLE_PI_LIMIT, limit of the angle regulator output.
+    min: 0
+    max: 1023
+
+  angle-lower-i-limit:
+    type: int
+    default: 256
+    description: ANGLE_LOWER_LIMIT.ANGLE_LOWER_I_LIMIT, lower limit of the angle integrator.
+    min: 0
+    max: 1023
+
+  sgp-thrs:
+    type: int
+    default: 0
+    description: SGP_CONF.SGP_THRS, StallGuard+ stall threshold.
+    min: 0
+    max: 511
+
+  sgp-filt-en:
+    type: boolean
+    description: SGP_CONF.sgp_filt_en, enable the StallGuard+ result filter.
+
+  sgp-low-vel-freeze:
+    type: int
+    default: 0
+    enum:
+      - 0
+      - 1
+    description: SGP_CONF.sgp_low_vel_freeze.
+
+  sgp-clear-cur-pi:
+    type: int
+    default: 1
+    enum:
+      - 0
+      - 1
+    description: SGP_CONF.sgp_clear_cur_pi (reset value 1).
+
+  sgp-low-vel-slope:
+    type: int
+    default: 0
+    description: SGP_CONF.SGP_LOW_VEL_SLOPE.
+    min: 0
+    max: 255
+
+  tsgp-low-vel-thrs:
+    type: int
+    default: 4096
+    description: TSGP_LOW_VEL_THRS (TSTEP units), StallGuard+ low velocity threshold.
+    min: 0
+    max: 1048575
+
+  cool-cur-div:
+    type: int
+    default: 2
+    description: COOLSTEPPLUS_CONF.COOL_CUR_DIV.
+    min: 0
+    max: 15
+
+  load-filt-en:
+    type: int
+    default: 1
+    enum:
+      - 0
+      - 1
+    description: COOLSTEPPLUS_CONF.load_filt_en (reset value 1).
+
+  cool-i:
+    type: int
+    default: 16
+    description: COOLSTEPPLUS_PI_REG.COOLSTEP_I.
+    min: 0
+    max: 1023
+
+  cool-p:
+    type: int
+    default: 128
+    description: COOLSTEPPLUS_PI_REG.COOLSTEP_P.
+    min: 0
+    max: 4095
+
+  cool-pi-off-speed:
+    type: int
+    default: 64
+    description: COOLSTEPPLUS_PI_DOWN.COOL_PI_OFF_SPEED.
+    min: 0
+    max: 4095
+
+  cool-pi-down-limit:
+    type: int
+    default: 128
+    description: COOLSTEPPLUS_PI_DOWN.COOL_PI_DOWN_LIMIT.
+    min: 0
+    max: 4095
+
+  cool-hi-generatoric-reserve:
+    type: int
+    default: 100
+    description: COOLSTEPPLUS_RESERVE_CONF.COOL_HI_GENERATORIC_RESERVE.
+    min: 0
+    max: 255
+
+  cool-low-generatoric-reserve:
+    type: int
+    default: 220
+    description: COOLSTEPPLUS_RESERVE_CONF.COOL_LOW_GENERATORIC_RESERVE.
+    min: 0
+    max: 255
+
+  cool-hi-load-reserve:
+    type: int
+    default: 50
+    description: COOLSTEPPLUS_RESERVE_CONF.COOL_HI_LOAD_RESERVE.
+    min: 0
+    max: 255
+
+  cool-low-load-reserve:
+    type: int
+    default: 150
+    description: COOLSTEPPLUS_RESERVE_CONF.COOL_LOW_LOAD_RESERVE.
+    min: 0
+    max: 255
+
+  udc-enable:
+    type: boolean
+    description: |
+      UDC_CONF.udc_enable, enable uDcStep. Requires en-stealthchop and, on the TMC5262, the
+      soft stop (en-softstop); both are checked at build time.
+
+  udc-accel-thrs:
+    type: int
+    default: 12
+    description: UDC_CONF.ACCEL_THRS, must be lower than udc-decel-thrs.
+    min: 0
+    max: 15
+
+  udc-decel-thrs:
+    type: int
+    default: 14
+    description: UDC_CONF.DECEL_THRS, must be higher than udc-accel-thrs.
+    min: 0
+    max: 15
+
+  tudcstep:
+    type: int
+    default: 0
+    description: TUDCSTEP, uDcStep velocity threshold (TSTEP units).
+    min: 0
+    max: 1048575
+
+  t-rcoil-meas:
+    type: int
+    default: 4096
+    description: T_RCOIL_MEAS, time of the coil resistance measurement (reset value 0x1000).
+    min: 0
+    max: 1048575
+
+  coil-inductance:
+    type: int
+    default: 0
+    description: COIL_INDUCT.COIL_INDUCT, coil inductance value.
+    min: 0
+    max: 32767
+
+  rcoil-manual:
+    type: boolean
+    description: |
+      COIL_INDUCT.rcoil_manual, use the user coil resistances rcoil-user-a and rcoil-user-b
+      instead of the measured ones.
+
+  rcoil-user-a:
+    type: int
+    default: 0
+    description: R_COIL_USER.R_COIL_USER_A, user coil resistance of phase A.
+    min: 0
+    max: 4095
+
+  rcoil-user-b:
+    type: int
+    default: 0
+    description: R_COIL_USER.R_COIL_USER_B, user coil resistance of phase B.
+    min: 0
+    max: 4095

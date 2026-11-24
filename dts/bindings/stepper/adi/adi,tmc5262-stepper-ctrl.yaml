@@ -1,0 +1,37 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 Analog Devices, Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+description: |
+  Motion controller (stepper_ctrl API) child of an ADI TMC5262 or TMC3241 node, using the
+  internal ramp generator. The parent must have step-source = "ramp-generator".
+
+  Velocities are in register units (microsteps per 2^24 / fCLK), see the ramp generator
+  conversion in the datasheet; with fCLK = 16 MHz one unit is 0.9537 microsteps/s and an
+  acceleration unit is 116.4 microsteps/s^2. The Zephyr stepper_ctrl_configure_ramp()
+  API takes microsteps/s and microsteps/s^2 instead.
+
+compatible: "adi,tmc5262-stepper-ctrl"
+
+include:
+  - name: adi,trinamic-ramp-generator.yaml
+    property-allowlist:
+      - vstart
+      - a1
+      - v1
+      - amax
+      - vmax
+      - dmax
+      - d1
+      - vstop
+      - tzerowait
+      - a2
+      - v2
+      - d2
+
+properties:
+  vmax:
+    required: true
+  amax:
+    required: true
+  dmax:
+    required: true

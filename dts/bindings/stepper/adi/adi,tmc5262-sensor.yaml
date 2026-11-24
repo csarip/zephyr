@@ -1,0 +1,22 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 Analog Devices, Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+description: |
+  Sensor child of an ADI TMC5262, TMC2262 or TMC3241 node. Exposes the supply voltage
+  (SENSOR_CHAN_VOLTAGE, VS) and the chip temperature (SENSOR_CHAN_DIE_TEMP) that the on-chip
+  ADC measures, through the Zephyr sensor API.
+
+  Example:
+
+    tmc5262: tmc5262@0 {
+        compatible = "adi,tmc5262";
+        reg = <0>;
+        ...
+        tmc5262_sensor: sensor {
+            compatible = "adi,tmc5262-sensor";
+        };
+    };
+
+compatible: "adi,tmc5262-sensor"
+
+include: sensor-device.yaml
