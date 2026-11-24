@@ -54,6 +54,14 @@ Below are two typical scenarios:
    integrated_controller_driver.rst
    individual_controller_driver.rst
 
+Drivers
+*******
+
+.. toctree::
+   :maxdepth: 1
+
+   adi_tmc5262.rst
+
 Stepper Motion Controller API Test Suite
 ****************************************
 
