@@ -1,0 +1,107 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 Analog Devices, Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+config STEPPER_ADI_TMC5262
+	bool "ADI TMC5262 / TMC2262 / TMC3241 stepper driver"
+	default y
+	depends on DT_HAS_ADI_TMC5262_ENABLED || DT_HAS_ADI_TMC2262_ENABLED || \
+			DT_HAS_ADI_TMC3241_ENABLED
+	select GPIO
+	select SPI
+	select STEPPER_ADI_TMC_SPI
+	select STEP_DIR_STEPPER
+	help
+	  Unified driver for the Analog Devices TMC5262 (two-phase controller and driver),
+	  TMC2262 (two-phase driver, STEP/DIR) and TMC3241 (three-phase controller and
+	  driver) stepper motor ICs, configured over SPI. The device variant is selected by
+	  the devicetree compatible.
+
+if STEPPER_ADI_TMC5262
+
+config STEPPER_ADI_TMC5262_TMC5262
+	bool
+	default y
+	depends on DT_HAS_ADI_TMC5262_ENABLED
+	help
+	  Variant data and code for the TMC5262.
+
+config STEPPER_ADI_TMC5262_TMC2262
+	bool
+	default y
+	depends on DT_HAS_ADI_TMC2262_ENABLED
+	help
+	  Variant data and code for the TMC2262.
+
+config STEPPER_ADI_TMC5262_TMC3241
+	bool
+	default y
+	depends on DT_HAS_ADI_TMC3241_ENABLED
+	help
+	  Variant data and code for the TMC3241.
+
+config STEPPER_ADI_TMC5262_PLUS
+	bool
+	default y
+	depends on DT_HAS_ADI_TMC5262_ENABLED || DT_HAS_ADI_TMC2262_ENABLED
+	help
+	  Extended API of the StealthChop+, StallGuard+, CoolStep+, uDcStep, coil measurement and
+	  TriCoder features, which only the TMC5262 and TMC2262 have. Excluded from a build that
+	  only has TMC3241 nodes (FR-VAR-005).
+
+config STEPPER_ADI_TMC5262_STEPPER_DRIVER
+	bool "TMC5262 stepper driver (stepper API)"
+	default y
+	depends on DT_HAS_ADI_TMC5262_STEPPER_DRIVER_ENABLED
+	help
+	  Enable, disable, microstep resolution and event API of the chip.
+
+config STEPPER_ADI_TMC5262_SENSOR
+	bool "TMC5262 supply voltage and temperature sensor"
+	default y
+	depends on DT_HAS_ADI_TMC5262_SENSOR_ENABLED
+	select SENSOR
+	help
+	  Expose the supply voltage (SENSOR_CHAN_VOLTAGE) and the chip temperature
+	  (SENSOR_CHAN_DIE_TEMP) of the on-chip ADC through the sensor API. The sensor is a child
+	  node with compatible adi,tmc5262-sensor of the chip node.
+
+config STEPPER_ADI_TMC5262_RAMP_GEN
+	bool "TMC5262 ramp generator support"
+	default y
+	depends on DT_HAS_ADI_TMC5262_ENABLED || DT_HAS_ADI_TMC3241_ENABLED
+	help
+	  Enable the internal ramp generator (stepper_ctrl API) of the TMC5262 and TMC3241.
+
+config STEPPER_ADI_TMC5262_STEPPER_CTRL
+	bool "TMC5262 motion controller (stepper_ctrl API)"
+	default y
+	depends on STEPPER_ADI_TMC5262_RAMP_GEN && DT_HAS_ADI_TMC5262_STEPPER_CTRL_ENABLED
+	help
+	  Positioning and velocity mode on the internal ramp generator.
+
+config STEPPER_ADI_TMC5262_INIT_PRIORITY
+	int "TMC5262 chip init priority"
+	default 85
+	range 0 99
+	help
+	  Initialization priority of the TMC5262 chip device. It must be later than the SPI
+	  and GPIO controllers and earlier than CONFIG_STEPPER_INIT_PRIORITY, which is used
+	  by the stepper child devices.
+
+config STEPPER_ADI_TMC5262_EVENT_POLL_INTERVAL_MS
+	int "TMC5262 event polling interval in ms"
+	default 100
+	range 5 10000
+	help
+	  When neither DO0 nor DO1 is wired to an interrupt GPIO, motion, stall and fault
+	  events are detected by polling the device at this interval while an event
+	  callback is registered. With DO interrupt GPIOs the polling continues at ten times
+	  this interval as a fallback, for events that have no DO source (for example the
+	  stopped event).
+
+module = STEPPER_ADI_TMC5262
+module-str = TMC5262 stepper
+parent-module = STEPPER
+source "subsys/logging/Kconfig.template.log_config_inherit"
+
+endif # STEPPER_ADI_TMC5262
