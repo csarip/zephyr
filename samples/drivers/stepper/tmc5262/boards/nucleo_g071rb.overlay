@@ -1,0 +1,16 @@
+/*
+ * SPDX-FileCopyrightText: Copyright (c) 2026 Analog Devices, Inc.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/*
+ * SPI bus of the Nucleo-G071RB used with a TMC5262 / TMC2262 / TMC3241 board. The chip node
+ * is added by the device overlay selected with -DEXTRA_DTC_OVERLAY_FILE=<device>.overlay.
+ */
+
+&spi1 {
+	pinctrl-0 = <&spi1_sck_pa5 &spi1_miso_pa6 &spi1_mosi_pa7>;
+	pinctrl-names = "default";
+	cs-gpios = <&gpiob 0 GPIO_ACTIVE_LOW>;
+	status = "okay";
+};
