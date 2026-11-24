@@ -1,0 +1,93 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 Analog Devices, Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+description: |
+  Optional reference switch, virtual stop and position compare properties of the TMC5262 and
+  TMC3241 (variants with a ramp generator). All properties are optional and default to the
+  reset state of SW_MODE, VIRTUAL_STOP_L/R, X_COMPARE and X_COMPARE_REPEAT. They only have an
+  effect while the ramp generator is the step source: setting one with step-source =
+  "step-dir" fails the build. Not available on the TMC2262.
+
+  The position compare event can be routed to DO0 or DO1 with the DO source "xcomp"
+  (do0-sources / do1-sources).
+
+properties:
+  stop-l-enable:
+    type: boolean
+    description: SW_MODE.stop_l_enable, left reference switch stops the motion.
+
+  stop-r-enable:
+    type: boolean
+    description: SW_MODE.stop_r_enable, right reference switch stops the motion.
+
+  pol-stop-l:
+    type: boolean
+    description: SW_MODE.pol_stop_l, left switch is low active.
+
+  pol-stop-r:
+    type: boolean
+    description: SW_MODE.pol_stop_r, right switch is low active.
+
+  swap-lr:
+    type: boolean
+    description: SW_MODE.swap_lr, swap the left and right switch inputs.
+
+  latch-l-active:
+    type: boolean
+    description: SW_MODE.latch_l_active, latch the position on the active edge of REFL.
+
+  latch-l-inactive:
+    type: boolean
+    description: SW_MODE.latch_l_inactive, latch the position on the inactive edge of REFL.
+
+  latch-r-active:
+    type: boolean
+    description: SW_MODE.latch_r_active, latch the position on the active edge of REFR.
+
+  latch-r-inactive:
+    type: boolean
+    description: SW_MODE.latch_r_inactive, latch the position on the inactive edge of REFR.
+
+  en-latch-encoder:
+    type: boolean
+    description: SW_MODE.en_latch_encoder, latch the encoder position as well.
+
+  sg-stop:
+    type: boolean
+    description: SW_MODE.sg_stop, stop the motion on a StallGuard event.
+
+  en-softstop:
+    type: boolean
+    description: SW_MODE.en_softstop, stop with the deceleration ramp instead of a hard stop.
+
+  en-virtual-stop-l:
+    type: boolean
+    description: SW_MODE.en_virtual_stop_l, enable the left virtual stop.
+
+  en-virtual-stop-r:
+    type: boolean
+    description: SW_MODE.en_virtual_stop_r, enable the right virtual stop.
+
+  virtual-stop-enc:
+    type: boolean
+    description: SW_MODE.virtual_stop_enc, the virtual stops relate to X_ENC instead of XACTUAL.
+
+  virtual-stop-l:
+    type: int
+    default: 0
+    description: VIRTUAL_STOP_L, position of the left virtual stop.
+
+  virtual-stop-r:
+    type: int
+    default: 0
+    description: VIRTUAL_STOP_R, position of the right virtual stop.
+
+  x-compare:
+    type: int
+    default: 0xFFFFFFFF
+    description: X_COMPARE, compare position (reset value 0xFFFFFFFF).
+
+  x-compare-repeat:
+    type: int
+    default: 0
+    description: X_COMPARE_REPEAT, repeat distance of the position compare.

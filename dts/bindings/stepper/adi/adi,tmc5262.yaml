@@ -1,0 +1,204 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 Analog Devices, Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+description: |
+  Analog Devices TMC5262 two-phase stepper motor controller and driver
+  (SPI, 65 V, 4.25 A RMS, internal ramp generator).
+
+  Example:
+
+    &spi1 {
+        tmc5262: tmc5262@0 {
+            compatible = "adi,tmc5262";
+            reg = <0>;
+            spi-max-frequency = <DT_FREQ_M(4)>;
+            sleepn-gpios = <&gpiob 4 GPIO_ACTIVE_HIGH>;
+            drv-enn-gpios = <&gpiob 5 GPIO_ACTIVE_LOW>;
+            current-range-ma = <4240>;
+            irun = <127>;
+            ihold = <32>;
+
+            stepper_driver: stepper-driver {
+                compatible = "adi,tmc5262-stepper-driver";
+                micro-step-res = <256>;
+            };
+
+            stepper_ctrl: motion-controller {
+                compatible = "adi,tmc5262-stepper-ctrl";
+                vmax = <51200>;
+                amax = <500>;
+                dmax = <500>;
+            };
+        };
+    };
+
+compatible: "adi,tmc5262"
+
+include:
+  - name: spi-device.yaml
+  - name: adi,tmc5262-base.yaml
+  - name: adi,tmc5262-plus.yaml
+  - name: adi,tmc5262-ramp-ext.yaml
+  - name: adi,trinamic-ramp-generator.yaml
+    property-allowlist:
+      - tpwmthrs
+
+properties:
+  reg:
+    required: true
+
+  step-source:
+    type: string
+    default: ramp-generator
+    enum:
+      - ramp-generator
+      - step-dir
+    description: |
+      Step source (GCONF.step_dir). "ramp-generator" uses the internal motion controller,
+      "step-dir" uses STEP and DIR from a zephyr,gpio-step-dir-stepper-ctrl node. With
+      step-dir, XACTUAL does not follow the external steps.
+
+  current-range-ma:
+    type: int
+    default: 1060
+    enum:
+      - 1060
+      - 2120
+      - 3180
+      - 4240
+    description: |
+      DRV_CONF.CURRENT_RANGE, full scale current in mA RMS. The ranges are 1.5, 3, 4.5 and
+      6 A peak, which is 1060, 2120, 3180 and 4240 mA RMS.
+
+  toff:
+    type: int
+    default: 5
+    description: CHOPCONF.TOFF, off time and driver enable. 0 disables the driver.
+    min: 0
+    max: 15
+
+  tbl:
+    type: int
+    default: 2
+    description: CHOPCONF.TBL, comparator blank time (0 = ~1.25 us ... 3 = ~3.6 us).
+    min: 0
+    max: 3
+
+  chm:
+    type: boolean
+    description: CHOPCONF.chm, constant off-time chopper instead of SpreadCycle.
+
+  hstrt-tfd210:
+    type: int
+    default: 5
+    description: CHOPCONF.HSTRT_TFD210, hysteresis start or fast decay time bits 2..0.
+    min: 0
+    max: 7
+
+  hend-offset:
+    type: int
+    default: 4
+    description: |
+      CHOPCONF.HEND_OFFSET raw value 0..15 (hysteresis end or sine offset -3 .. +12).
+    min: 0
+    max: 15
+
+  tpfd:
+    type: int
+    default: 4
+    description: CHOPCONF.TPFD, passive fast decay time (0 = disabled).
+    min: 0
+    max: 15
+
+  fd3:
+    type: boolean
+    description: CHOPCONF.fd3, MSB of the fast decay time with chm = 1.
+
+  disfdcc:
+    type: boolean
+    description: CHOPCONF.disfdcc, fixed fast decay cycle with chm = 1.
+
+  hard-stop-clr-cur-int:
+    type: int
+    default: 1
+    enum:
+      - 0
+      - 1
+    description: |
+      SW_MODE.hard_stop_clr_cur_int, clear the current PI integrator upon a hard stop
+      (reset value 1, recommended).
+
+  en-stealthchop:
+    type: boolean
+    description: |
+      GCONF.en_stealthchop, enable StealthChop+ (depending on tpwmthrs). Can only be
+      changed at standstill at run time.
+
+  pwm-freq:
+    type: int
+    default: 0
+    description: PWMCONF.PWM_FREQ, 0 = 19.5 kHz ... 8 = 58.6 kHz.
+    min: 0
+    max: 8
+
+  freewheel:
+    type: int
+    default: 0
+    description: |
+      PWMCONF.FREEWHEEL, standstill behavior at IHOLD = 0 (0 normal, 1 freewheeling,
+      2 passive braking LS, 3 passive braking HS).
+    min: 0
+    max: 3
+
+  ol-thrsh:
+    type: int
+    default: 0
+    description: PWMCONF.OL_THRSH, StealthChop+ open load sensitivity.
+    min: 0
+    max: 3
+
+  sd-on-meas-lo:
+    type: int
+    default: 14
+    description: PWMCONF.SD_ON_MEAS_LO, must be lower than sd-on-meas-hi.
+    min: 0
+    max: 15
+
+  sd-on-meas-hi:
+    type: int
+    default: 15
+    description: PWMCONF.SD_ON_MEAS_HI, must be higher than sd-on-meas-lo.
+    min: 0
+    max: 15
+
+  do0-sources:
+    enum:
+      - error
+      - otpw
+      - stall
+      - index
+      - step
+      - dir
+      - xcomp
+      - ov
+      - udcstep
+      - ev-stop-ref
+      - ev-stop-sg
+      - ev-pos-reached
+      - ev-n-deviation
+
+  do1-sources:
+    enum:
+      - error
+      - otpw
+      - stall
+      - index
+      - step
+      - dir
+      - xcomp
+      - ov
+      - udcstep
+      - ev-stop-ref
+      - ev-stop-sg
+      - ev-pos-reached
+      - ev-n-deviation

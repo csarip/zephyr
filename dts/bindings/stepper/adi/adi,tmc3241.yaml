@@ -1,0 +1,132 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 Analog Devices, Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+description: |
+  Analog Devices TMC3241 three-phase stepper motor controller and driver
+  (SPI, 65 V, 4.2 A RMS, internal ramp generator).
+
+  The microstep resolution of this device is expressed in electrical microsteps per
+  quarter sine wave. One full step corresponds to 2/3 of the configured value.
+
+  Example:
+
+    &spi1 {
+        tmc3241: tmc3241@0 {
+            compatible = "adi,tmc3241";
+            reg = <0>;
+            spi-max-frequency = <DT_FREQ_M(4)>;
+            sleepn-gpios = <&gpiob 4 GPIO_ACTIVE_HIGH>;
+            drv-enn-gpios = <&gpiob 5 GPIO_ACTIVE_LOW>;
+            current-range-ma = <4240>;
+
+            stepper_driver: stepper-driver {
+                compatible = "adi,tmc5262-stepper-driver";
+                micro-step-res = <256>;
+            };
+
+            stepper_ctrl: motion-controller {
+                compatible = "adi,tmc5262-stepper-ctrl";
+                vmax = <51200>;
+                amax = <500>;
+                dmax = <500>;
+            };
+        };
+    };
+
+compatible: "adi,tmc3241"
+
+include: [spi-device.yaml, "adi,tmc5262-base.yaml", "adi,tmc5262-ramp-ext.yaml"]
+
+properties:
+  reg:
+    required: true
+
+  step-source:
+    type: string
+    default: ramp-generator
+    enum:
+      - ramp-generator
+      - step-dir
+    description: |
+      Step source (GCONF.threephase_mcc). "ramp-generator" uses the internal motion
+      controller, "step-dir" uses STEP and DIR from a zephyr,gpio-step-dir-stepper-ctrl
+      node.
+
+  current-range-ma:
+    type: int
+    default: 1060
+    enum:
+      - 1060
+      - 2120
+      - 3180
+      - 4240
+    description: |
+      DRV_CONF.CURRENT_RANGE, full scale current in mA RMS. The ranges are 1.5, 3, 4.5 and
+      6 A peak, which is 1060, 2120, 3180 and 4240 mA RMS.
+
+  toff:
+    type: int
+    default: 2
+    description: CHOPCONF.TOFF, off time and driver enable. 0 disables the driver.
+    min: 0
+    max: 15
+
+  tbl:
+    type: int
+    default: 2
+    description: CHOPCONF.TBL, comparator blank time (0 = 16 ... 3 = 54 clocks).
+    min: 0
+    max: 3
+
+  hyst:
+    type: int
+    default: 10
+    description: |
+      CHOPCONF.HYST, hysteresis value of the chopper (1/512 of this setting adds to the
+      coil current setting).
+    min: 0
+    max: 63
+
+  nosd:
+    type: boolean
+    description: CHOPCONF.nosd, skip the slow decay phase between chopper cycles.
+
+  csync:
+    type: boolean
+    description: CHOPCONF.CSYNC, synchronize the chopper to the step frequency.
+
+  sg-speed:
+    type: boolean
+    description: |
+      CHOPCONF.sg_speed, StallGuard uses more filtering (for low motor velocities).
+      Note: CHOPCONF.chm is reserved on this device and not configurable.
+
+  do0-sources:
+    enum:
+      - error
+      - otpw
+      - stall
+      - index
+      - step
+      - dir
+      - xcomp
+      - ov
+      - ev-stop-ref
+      - ev-stop-sg
+      - ev-pos-reached
+      - ev-n-deviation
+
+  do1-sources:
+    enum:
+      - error
+      - otpw
+      - stall
+      - index
+      - step
+      - dir
+      - xcomp
+      - ov
+      - ev-stop-ref
+      - ev-stop-sg
+      - ev-pos-reached
+      - ev-n-deviation

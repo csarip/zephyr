@@ -1,0 +1,235 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 Analog Devices, Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+description: |
+  Common properties of the ADI TMC5262, TMC2262 and TMC3241 stepper motor drivers.
+
+  This is the base binding of the unified TMC5262 driver. Do not use it directly, use
+  adi,tmc5262.yaml, adi,tmc2262.yaml or adi,tmc3241.yaml. Each variant binding adds the
+  properties that only exist on that device (chopper fields, step source, StealthChop+,
+  current range table, DO sources).
+
+  The chip node is the SPI device (parent). It can have these child nodes:
+
+  - adi,tmc5262-stepper-driver: stepper API (enable, microstep, events). On all variants.
+    On the TMC2262, and on the other variants when STEP/DIR is the step source, point
+    the "stepper-driver" property of a zephyr,gpio-step-dir-stepper-ctrl node to it.
+  - adi,tmc5262-stepper-ctrl: stepper_ctrl API on the internal ramp generator
+    (TMC5262 and TMC3241 only, step-source = "ramp-generator").
+
+  The STEP and DIR pins are owned by the zephyr,gpio-step-dir-stepper-ctrl node, not by
+  the chip node.
+
+include:
+  - name: adi,trinamic-stallguard.yaml
+    property-allowlist:
+      - stallguard2-threshold
+  - name: adi,trinamic-ramp-generator.yaml
+    property-allowlist:
+      - tcoolthrs
+      - thigh
+      - tpowerdown
+
+properties:
+  sleepn-gpios:
+    type: phandle-array
+    description: |
+      SLEEPN pin. Use GPIO_ACTIVE_HIGH: the logical level 1 is "awake" (pin high).
+      The driver pulses the pin low for at least 50 us for a hardware reset and holds
+      it low in sleep mode. Omit if the board ties SLEEPN high; sleep mode and the
+      hardware reset are then not available.
+
+  drv-enn-gpios:
+    type: phandle-array
+    description: |
+      DRV_ENN pin (power stage enable, active low). Use GPIO_ACTIVE_LOW so that the
+      logical level 1 enables the power stage. The driver keeps the power stage disabled
+      until stepper_enable() is called. If omitted (pin tied low) the driver disables
+      the outputs with CHOPCONF.TOFF = 0 instead.
+
+  do0-gpios:
+    type: phandle-array
+    description: |
+      DO0 diagnostic output, used as interrupt input. DO0 is held low during reset.
+      If neither do0-gpios nor do1-gpios is provided, events are polled at
+      CONFIG_STEPPER_ADI_TMC5262_EVENT_POLL_INTERVAL_MS.
+
+  do1-gpios:
+    type: phandle-array
+    description: DO1 diagnostic output, used as interrupt input.
+
+  clock-source:
+    type: string
+    default: internal
+    enum:
+      - internal
+      - external
+    description: |
+      System clock source: the internal 16 MHz oscillator or an external clock on pin CLK.
+      The ramp generator, which runs on the PLL output, always uses 16 MHz for unit
+      conversion.
+
+  clock-frequency:
+    type: int
+    default: 16000000
+    description: |
+      Frequency of the external clock in Hz when clock-source is "external". Must be
+      1 MHz to 32 MHz in 1 MHz steps. CLOCK_DIVIDER is set to MHz - 1. Ignored for the
+      internal oscillator.
+
+  current-range-scale-percent:
+    type: int
+    default: 100
+    enum:
+      - 25
+      - 50
+      - 75
+      - 100
+    description: |
+      DRV_CONF.CURRENT_RANGE_SCALE. A value below 100 requires the lowest current range.
+
+  irun:
+    type: int
+    default: 240
+    description: |
+      IHOLD_IRUN.IRUN, motor run current scaler 0..255 (reset default 240). Choose
+      current-range-ma so that the normal IRUN is 128 to 255.
+    min: 0
+    max: 255
+
+  ihold:
+    type: int
+    default: 64
+    description: IHOLD_IRUN.IHOLD, standstill current scaler 0..255 (reset default 64).
+    min: 0
+    max: 255
+
+  iholddelay:
+    type: int
+    default: 7
+    description: |
+      IHOLD_IRUN.IHOLDDELAY, delay per current reduction step in multiples of 2^11 clocks.
+    min: 0
+    max: 255
+
+  irundelay:
+    type: int
+    default: 4
+    description: |
+      IHOLD_IRUN.IRUNDELAY, delay per current increment step in multiples of 64 clocks.
+    min: 0
+    max: 15
+
+  slope-control:
+    type: int
+    default: 3
+    description: |
+      DRV_CONF.SLOPE_CONTROL: 0 = 100 V/us, 1 = 200 V/us, 2 = 400 V/us, 3 = 800 V/us.
+    enum:
+      - 0
+      - 1
+      - 2
+      - 3
+
+  invert-direction:
+    type: boolean
+    description: |
+      GCONF.shaft: invert the motor direction (STEP/DIR operation only; rejected at run
+      time if the ramp generator is the step source).
+
+  stop-enable:
+    type: boolean
+    description: GCONF.stop_enable, ENCA acts as emergency stop for the sequencer.
+
+  ov-output:
+    type: boolean
+    description: |
+      GCONF.OV_nN, use ENCN as (open-drain, high active) overvoltage output instead of
+      the encoder N channel. Cannot be combined with encoder-n-channel.
+
+  encoder-n-channel:
+    type: boolean
+    description: |
+      The application uses the N channel of the incremental encoder. Used to reject the
+      combination with ov-output at build time.
+
+  multistep-filt:
+    type: int
+    default: 1
+    enum:
+      - 0
+      - 1
+    description: |
+      GCONF.multistep_filt, step input filtering for external step sources (reset
+      default 1).
+
+  small-hysteresis:
+    type: int
+    default: 1
+    enum:
+      - 0
+      - 1
+    description: |
+      GCONF.small_hysteresis, 1 = 1/32 hysteresis for step frequency comparison
+      (recommended with the ramp generator), 0 = 1/16 (reset default 1).
+
+  fast-standstill:
+    type: int
+    default: 0
+    enum:
+      - 0
+      - 1
+    description: |
+      GCONF.fast_standstill, 1 = standstill after 2^18 clocks, 0 = 2^20 clocks.
+
+  dedge:
+    type: boolean
+    description: |
+      CHOPCONF.dedge, both STEP edges are active. Also reported to a
+      zephyr,gpio-step-dir-stepper-ctrl through the stepper-driver child.
+
+  intpol:
+    type: int
+    default: 1
+    enum:
+      - 0
+      - 1
+    description: |
+      CHOPCONF.intpol, interpolate the microstep resolution to 256 microsteps (useful
+      for STEP/DIR operation). The default 1 is the reset value of the register.
+
+  stallguard2-filter:
+    type: boolean
+    description: COOLCONF.sfilt, StallGuard2 filtering for low speeds.
+
+  do0-sources:
+    type: string-array
+    description: |
+      Sources routed to DO0 (DO_CONF). The valid values are defined by the variant binding.
+
+  do1-sources:
+    type: string-array
+    description: |
+      Sources routed to DO1 (DO_CONF). The valid values are defined by the variant binding.
+
+  do0-push-pull:
+    type: boolean
+    description: |
+      DO0 is a push-pull output (default: open collector, active low).
+
+  do0-active-high:
+    type: boolean
+    description: |
+      DO0 push-pull polarity is high active. Default is low active, which is the reset
+      value of DO_CONF.do0_invPP.
+
+  do1-push-pull:
+    type: boolean
+    description: |
+      DO1 is a push-pull output (default: open collector, active low).
+
+  do1-active-high:
+    type: boolean
+    description: |
+      DO1 push-pull polarity is high active. Default is low active, which is the reset
+      value of DO_CONF.do1_invPP.

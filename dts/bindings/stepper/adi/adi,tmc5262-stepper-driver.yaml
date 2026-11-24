@@ -1,0 +1,26 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 Analog Devices, Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+description: |
+  Stepper driver (stepper API) child of an ADI TMC5262, TMC2262 or TMC3241 node.
+
+  Provides enable, disable, microstep resolution and events. For STEP/DIR operation
+  reference this node from the "stepper-driver" property of a
+  zephyr,gpio-step-dir-stepper-ctrl node: the controller then takes the step pulse
+  width from step-width-ns and the active edge setting from the "dedge" property of
+  the chip node.
+
+compatible: "adi,tmc5262-stepper-driver"
+
+include:
+  - name: stepper-driver.yaml
+    property-allowlist:
+      - micro-step-res
+  - name: step-dir-timing.yaml
+
+properties:
+  step-width-ns:
+    default: 100
+    description: |
+      Minimum STEP pulse width in nanoseconds. The TMC5262 requires at least 100 ns
+      for STEP high, STEP low and DIR to STEP setup.
