@@ -8,8 +8,9 @@
 
 #define BUFFER_SIZE 5U
 
-int tmc_spi_read_register(const struct spi_dt_spec *bus, const uint8_t read_address_mask,
-			  const uint8_t register_address, uint32_t *data)
+int tmc_spi_read_register_status(const struct spi_dt_spec *bus, const uint8_t read_address_mask,
+				 const uint8_t register_address, uint32_t *data,
+				 uint8_t *status_byte)
 {
 	uint8_t tx_buffer[BUFFER_SIZE] = {read_address_mask & register_address, 0U, 0U, 0U, 0U};
 	uint8_t rx_buffer[BUFFER_SIZE];
@@ -48,11 +49,22 @@ int tmc_spi_read_register(const struct spi_dt_spec *bus, const uint8_t read_addr
 	*data = ((uint32_t)rx_buffer[1] << 24) + ((uint32_t)rx_buffer[2] << 16) +
 		((uint32_t)rx_buffer[3] << 8) + (uint32_t)rx_buffer[4];
 
+	if (status_byte != NULL) {
+		*status_byte = rx_buffer[0];
+	}
+
 	return status;
 }
 
-int tmc_spi_write_register(const struct spi_dt_spec *bus, const uint8_t write_bit,
-			   const uint8_t register_address, const uint32_t data)
+int tmc_spi_read_register(const struct spi_dt_spec *bus, const uint8_t read_address_mask,
+			  const uint8_t register_address, uint32_t *data)
+{
+	return tmc_spi_read_register_status(bus, read_address_mask, register_address, data, NULL);
+}
+
+int tmc_spi_write_register_status(const struct spi_dt_spec *bus, const uint8_t write_bit,
+				  const uint8_t register_address, const uint32_t data,
+				  uint8_t *status_byte)
 {
 	uint8_t tx_buffer[BUFFER_SIZE] = {write_bit | register_address, data >> 24, data >> 16,
 					  data >> 8, data};
@@ -82,5 +94,15 @@ int tmc_spi_write_register(const struct spi_dt_spec *bus, const uint8_t write_bi
 		return status;
 	}
 
+	if (status_byte != NULL) {
+		*status_byte = rx_buffer[0];
+	}
+
 	return status;
+}
+
+int tmc_spi_write_register(const struct spi_dt_spec *bus, const uint8_t write_bit,
+			   const uint8_t register_address, const uint32_t data)
+{
+	return tmc_spi_write_register_status(bus, write_bit, register_address, data, NULL);
 }
