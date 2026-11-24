@@ -1,0 +1,29 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026 Analog Devices, Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+mainmenu "TMC5262 / TMC2262 / TMC3241 stepper sample"
+
+config SAMPLE_MOVE_MICROSTEPS
+	int "Microsteps to move"
+	default 3200
+	help
+	  Number of microsteps of the positioning move (or of STEP/DIR pulses on the TMC2262).
+
+config SAMPLE_STEP_INTERVAL_NS
+	int "Interval between microsteps in ns (TMC2262 STEP/DIR pulses)"
+	default 100000
+	help
+	  Microstep interval of the GPIO STEP/DIR pulses, 100000 ns = 10 kHz.
+
+config SAMPLE_RAMP_INTERVAL_NS
+	int "Interval between microsteps in ns (ramp generator)"
+	default 19500
+	help
+	  Microstep interval that sets VMAX on the TMC5262 and TMC3241, about 51.3 kHz. It must
+	  give a VMAX that is not below V1 and V2 of the overlay (53687 register units).
+
+config SAMPLE_MOVE_TIMEOUT_MS
+	int "Timeout for the move in ms"
+	default 5000
+
+source "Kconfig.zephyr"

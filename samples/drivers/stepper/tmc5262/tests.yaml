@@ -1,0 +1,21 @@
+sample:
+  name: TMC5262 / TMC2262 / TMC3241 Stepper Sample
+tests:
+  sample.drivers.stepper.tmc5262:
+    tags: stepper
+    platform_allow: nucleo_g071rb
+    depends_on: spi
+    build_only: true
+    extra_args: EXTRA_DTC_OVERLAY_FILE="tmc5262.overlay"
+  sample.drivers.stepper.tmc2262:
+    tags: stepper
+    platform_allow: nucleo_g071rb
+    depends_on: spi
+    build_only: true
+    extra_args: EXTRA_DTC_OVERLAY_FILE="tmc2262.overlay"
+  sample.drivers.stepper.tmc3241:
+    tags: stepper
+    platform_allow: nucleo_g071rb
+    depends_on: spi
+    build_only: true
+    extra_args: EXTRA_DTC_OVERLAY_FILE="tmc3241.overlay"
